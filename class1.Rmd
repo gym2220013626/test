@@ -1,0 +1,180 @@
+---
+title: "class 1 assignment"
+author: "郭一懋"
+date: "2022-09-03"
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+# question
+
+Carry out the following exploratory time series analysis in R using either
+the chocolate or the beer production data from §1.4.3.
+
+**a) **Produce a time plot of the data. Plot the aggregated annual series and
+a boxplot that summarises the observed values for each season, and
+comment on the plots.
+
+**b) **Decompose the series into the components trend, seasonal effect, and
+residuals, and plot the decomposed series. Produce a plot of the trend
+with a superimposed seasonal effect.
+
+
+# answer
+
+## data cleaning
+
+Read the data from the database(*chapter1 cbe.dat*) into time series variables and display them with the plot function.
+
+```{r}
+#page 24 question 1 
+#数据读取
+www <- "C:/Users/20530/Desktop/book datasets-20220903/book datasets/chapter1 cbe.dat"
+CBE <- read.table(www, header = T)
+#数据整理
+Beer.ts <- ts(CBE[, 2], start = 1958, freq = 12)
+Choc.ts <- ts(CBE[, 1], start = 1958, freq = 12)
+#显示数据
+plot(Beer.ts,ylab = "beer (Ml)")
+
+plot(Choc.ts,ylab = " chocolate-based production (tonnes) ")
+```
+
+
+## question a
+
+### choc data answer
+
+Use the aggregate function to sum the monthly chocolate consumption data to get the annual chocolate consumption data to summarize the trend
+
+```{r}
+#第一题中的choc部分
+plot(Choc.ts,ylab = " chocolate-based production (tonnes) ")
+Choc.annual <- aggregate(Choc.ts, FUN = mean)
+plot(Choc.annual,ylab = " chocolate-based production (tonnes) ")
+```
+
+Chocolate consumption figures were generally on the rise, with small fluctuations
+
+Use the boxplot function to make a box plot showing the characteristics of chocolate consumption per month
+
+```{r}
+boxplot(Choc.ts~cycle(Choc.ts),ylab = " chocolate-based production (tonnes) ",xlab = "month")
+```
+
+Chocolate consumption was lower in January and December and higher in May and June than others.
+
+### beer data answer
+
+Use the aggregate function to sum the monthly beer consumption data to get the annual beer consumption data to summarize the trend
+
+```{r}
+#第一题中的beer部分
+plot(Beer.ts,ylab = "beer (Ml)")
+Beer.annual <- aggregate(Beer.ts, FUN = mean)
+plot(Beer.annual,ylab = "beer (Ml)")
+```
+
+Beer consumption rose before 1975 and then stabilizes
+
+```{r}
+boxplot(Beer.ts~cycle(Beer.ts),ylab = "beer (Ml)",xlab = "month")
+```
+
+Beer consumption was lower in June and July and higher in November and December than others.
+
+## question b
+
+### choc data answer
+
+Use the decompose function to decompose a time series from both addition and multiplication
+
+```{r}
+#第二题中的choc部分
+#相加的分解
+Choco.decom <- decompose(Choc.ts)
+plot(decompose(Choc.ts))
+#相乘的分解
+Choc.decom <- decompose(Choc.ts, type = "mult")
+plot(Choc.decom)
+```
+
+Subtract the actual value and the predicted value to get the error series, and then plot the log function of the absolute value of the error series to show the magnitude of the error for the two decomposition methods
+
+```{r warning=FALSE}
+#相加的误差
+residuals <- Choc.ts - (Choco.decom$trend + Choco.decom$seasonal)
+#相乘的误差
+residuals1 <- Choc.ts - (Choc.decom$trend * Choc.decom$seasonal)
+#将两个误差的绝对值展示在同一种图中
+ts.plot(cbind(abs(residuals),abs(residuals1)),lty=1:2)
+#将两个误差的绝对值的对数展示在同一种图中
+ts.plot(cbind(log(abs(residuals)),log(abs(residuals1))),lty=1:2)
+```
+
+According to the above figure, the residual of the additive decomposition method is an order of magnitude higher than the residual of the multiplication decomposition method
+
+Use the plot function to draw trends, seasonal changes, errors, actual values, and predicted values
+
+```{r}
+Trend <- Choc.decom$trend
+Seasonal <- Choc.decom$seasonal
+residuals <- Choc.ts - (Choc.decom$trend * Choc.decom$seasonal)
+#趋势
+ts.plot(Trend)
+#季节变化
+ts.plot(Seasonal)
+#误差
+ts.plot(residuals)
+#预测
+ts.plot(Trend * Seasonal)
+#实线是预测，虚线是数据
+ts.plot(cbind(Choc.ts, Trend * Seasonal), lty = 2:1)
+```
+
+The curve of the actual value is very close to the curve of the predicted value
+
+### beer data answer
+
+Use the decompose function to decompose a time series from both addition and multiplication
+
+```{r}
+#第二题中的Beer部分
+#相加的分解
+plot(decompose(Beer.ts))
+Beer1.decom <- decompose(Beer.ts)
+#相乘的分解
+Beer.decom <- decompose(Beer.ts, type = "mult")
+plot(Beer.decom)
+```
+
+```{r warning=FALSE}
+#相加的误差
+residuals <- Beer.ts - (Beer1.decom$trend + Beer1.decom$seasonal)
+#相乘的误差
+residuals1 <- Beer.ts - (Beer.decom$trend * Beer.decom$seasonal)
+#将两个误差的绝对值展示在同一种图中
+ts.plot(cbind(abs(residuals),abs(residuals1)),lty=1:2)
+#将两个误差的绝对值的对数展示在同一种图中
+ts.plot(cbind(log(abs(residuals)),log(abs(residuals1))),lty=1:2)
+```
+
+```{r}
+Trend <- Beer.decom$trend
+Seasonal <- Beer.decom$seasonal
+residuals <- Beer.ts - (Beer.decom$trend * Beer.decom$seasonal)
+#趋势
+ts.plot(Trend)
+#季节变化
+ts.plot(Seasonal)
+#误差
+ts.plot(residuals)
+#预测
+ts.plot(Trend * Seasonal)
+#实线是预测，虚线是数据
+ts.plot(cbind(Beer.ts, Trend * Seasonal), lty = 2:1)
+```
+
